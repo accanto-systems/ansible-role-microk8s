@@ -1,0 +1,69 @@
+- name: Update apt cache
+  raw: apt-get -y update
+
+- name: If needed, install Python
+  raw: apt-get -y install python python-pip
+
+- name: Install base dependencies
+  apt: 
+    name: 
+      - snapd
+    state: present 
+  become: yes
+
+- name: Check is ufw installed
+  shell: command -v ufw >/dev/null 2>&1
+  register: is_ufw_exist
+  ignore_errors: yes
+
+- name: Disabling ufw
+  command: ufw disable
+  become: yes
+  when: is_ufw_exist.rc == 0
+
+- name: Set ip forwarding
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: 1
+    sysctl_set: yes
+
+- name: Set bridged ipv4 permission
+  sysctl:
+    name: net.bridge.bridge-nf-call-iptables
+    value: 262144
+    sysctl_set: yes
+
+- name: Disable Swap
+  command: swapoff -a
+
+- name: Install microk8s
+  become: yes
+  snap:
+    name: microk8s
+    classic: yes
+    channel: "{{ microk8s_version }}"
+
+- name: Microk8s status
+  command: microk8s.status --wait-ready
+
+- name: Microk8s inspect
+  command: microk8s.inspect
+
+- name: Alias kubectl
+  command: snap alias microk8s.kubectl kubectl
+
+- name: Alias docker
+  command: snap alias microk8s.docker docker
+
+- name: Enable dns
+  command: microk8s.enable dns
+
+- name: Enable ingress
+  command: microk8s.enable ingress
+
+- name: Enable storage
+  command: microk8s.enable storage
+
+- name: Enable K8s Dashboard
+  command: microk8s.enable dashboard
+  when: k8s_dashboard|default(False)|bool == True
