@@ -15,3 +15,7 @@ microk8s_version: "1.13/stable"
 ## Persistent Storage
 
 Microk8s supports the hostpath-provisioner and is enabled by default. This means that Kubernetes pods need only specify the storage class "microk8s-hostpath" and MicroK8s will take care of provisioning (hostpath) persistent volumes. These volumes will reside in the directory "/var/snap/microk8s/common/default-storage".
+
+## Add an Insecure Docker Registry
+
+Add insecure registries to the file '/var/snap/microk8s/current/args/docker-daemon.json' and restart MicroK8s Docker using 'sudo systemctl restart snap.microk8s.daemon-docker.service'

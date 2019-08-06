@@ -27,12 +27,6 @@
     value: 1
     sysctl_set: yes
 
-- name: Set bridged ipv4 permission
-  sysctl:
-    name: net.bridge.bridge-nf-call-iptables
-    value: 262144
-    sysctl_set: yes
-
 - name: Disable Swap
   command: swapoff -a
 
@@ -42,6 +36,40 @@
     name: microk8s
     classic: yes
     channel: "{{ microk8s_version }}"
+
+- name: Update Microk8s docker-daemon.json file
+  template:
+    src: "docker-daemon.json"
+    dest: "/var/snap/microk8s/current/args/docker-daemon.json"
+    owner: "root"
+    group: "root"
+
+- name: Microk8s status
+  command: microk8s.status --wait-ready
+
+- name: Allow Privileged for Kubelet (needed by Elasticsearch Helm chart)
+  lineinfile:
+    dest: /var/snap/microk8s/current/args/kubelet
+    line: "--allow-privileged=true"
+    state: present
+
+- name: Allow Privileged for K8s Apiserver (needed by Elasticsearch Helm chart)
+  lineinfile:
+    dest: /var/snap/microk8s/current/args/kube-apiserver
+    line: "--allow-privileged=true"
+    state: present
+
+- name: Set File Descriptor Limits for Microk8s
+  lineinfile:
+    dest: /var/snap/microk8s/current/args/containerd-env
+    line: "ulimit -n 65536"
+    state: present
+
+- name: Stop Microk8s
+  raw: microk8s.stop
+
+- name: Start Microk8s
+  raw: microk8s.start
 
 - name: Microk8s status
   command: microk8s.status --wait-ready
@@ -67,3 +95,9 @@
 - name: Enable K8s Dashboard
   command: microk8s.enable dashboard
   when: k8s_dashboard|default(False)|bool == True
+
+# needed by e.g. docker-compose
+- name: Set Docker Environment Variables
+  set_fact:
+    DOCKER_ENV:
+      DOCKER_HOST: "unix://var/snap/microk8s/current/docker.sock"
