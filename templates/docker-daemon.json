@@ -1,0 +1,10 @@
+{
+  "insecure-registries" : ["localhost:32000"],
+  "default-ulimits": {
+    "nofile": {
+      "Name": "nofile",
+      "Hard": 65536,
+      "Soft": 65536
+     }
+  }
+}
