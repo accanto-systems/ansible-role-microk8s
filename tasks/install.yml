@@ -95,9 +95,3 @@
 - name: Enable K8s Dashboard
   command: microk8s.enable dashboard
   when: k8s_dashboard|default(False)|bool == True
-
-# needed by e.g. docker-compose
-- name: Set Docker Environment Variables
-  set_fact:
-    DOCKER_ENV:
-      DOCKER_HOST: "unix://var/snap/microk8s/current/docker.sock"
