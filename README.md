@@ -4,6 +4,20 @@ Ansible role to install Microk8s (defaults to version "1.13/stable"). Includes o
 
 Microk8s (https://microk8s.io/) is a lightweight, development/test only Kubernetes installation. Do not run in production; in particular, the Kubernetes API is not secure.
 
+## Pre-requisites
+
+Apparmor must be running:
+
+```
+sudo service apparmor start
+```
+
+Port 8080 should be free. Remove apache2:
+
+```
+sudo apt-get purge apache2
+```
+
 ## Configure Versions
 
 Use the following variables to customise the versions installed:
