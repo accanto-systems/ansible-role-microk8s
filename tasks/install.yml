@@ -65,6 +65,9 @@
     line: "ulimit -n 65536"
     state: present
 
+- name: Add Insecure Registries
+  import_tasks: add-insecure-registries.yml
+
 - name: Stop Microk8s
   raw: microk8s.stop
 

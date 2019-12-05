@@ -1,0 +1,49 @@
+- name: Check for Docker daemon.json
+  stat:
+    path: /var/snap/microk8s/current/args/docker-daemon.json
+  register: daemon_stat_result
+
+- name: Create Docker daemon.json
+  file: 
+    path: /var/snap/microk8s/current/args/docker-daemon.json
+    state: touch
+  when: daemon_stat_result.stat.exists == False
+
+- name: Read existing daemon.json
+  slurp:
+    src: /var/snap/microk8s/current/args/docker-daemon.json
+  register: existing_daemon_content
+  when: daemon_stat_result.stat.exists == True
+
+- name: Parsing json
+  set_fact:
+    existing_daemon: "{{ existing_daemon_content['content'] | b64decode | default({}) }}"
+  when: daemon_stat_result.stat.exists == True
+
+- name: Init daemon.json content (if needed)
+  set_fact:
+    existing_daemon: {}
+  when: daemon_stat_result.stat.exists == False or existing_daemon|length==0
+
+- name: Gather existing insecure-registries
+  set_fact:
+    existing_insecure_registries: "{{ existing_daemon['insecure-registries'] | default([],true)}}"
+    insecure_registries: "{{ existing_daemon['insecure-registries'] | default([],true)}}"
+  when: daemon_stat_result.stat.exists == True
+
+- name: Add insecure registry
+  set_fact:
+    insecure_registries: "{{ insecure_registries|default([]) + [item] }}"
+  loop: "{{ docker_insecure_registries | default([]) }}"
+  when: item not in insecure_registries|default([])
+
+- name: Creating new daemon json content 
+  set_fact:
+    new_daemon: "{{ existing_daemon | combine({ 'insecure-registries': insecure_registries }) }}"
+  when: existing_insecure_registries|default([])|length != insecure_registries|length
+
+- name: Write output to Docker daemon.json
+  copy:
+    content: "{{ new_daemon | to_nice_json }}"
+    dest: /var/snap/microk8s/current/args/docker-daemon.json
+  when: existing_insecure_registries|default([])|length != insecure_registries|length
