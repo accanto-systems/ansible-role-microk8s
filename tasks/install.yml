@@ -45,7 +45,9 @@
     group: "root"
 
 - name: Microk8s status
-  command: microk8s.status --wait-ready
+  shell: source /etc/profile.d/apps-bin-path.sh && microk8s.status --wait-ready
+  args:
+    executable: /bin/bash
 
 - name: Allow Privileged for Kubelet (needed by Elasticsearch Helm chart)
   lineinfile:
@@ -69,32 +71,52 @@
   import_tasks: add-insecure-registries.yml
 
 - name: Stop Microk8s
-  raw: microk8s.stop
+  shell: source /etc/profile.d/apps-bin-path.sh && microk8s.stop
+  args:
+    executable: /bin/bash
 
 - name: Start Microk8s
-  raw: microk8s.start
+  shell: source /etc/profile.d/apps-bin-path.sh && microk8s.start
+  args:
+    executable: /bin/bash
 
 - name: Microk8s status
-  command: microk8s.status --wait-ready
+  shell: source /etc/profile.d/apps-bin-path.sh && microk8s.status --wait-ready
+  args:
+    executable: /bin/bash
 
 - name: Microk8s inspect
-  command: microk8s.inspect
+  shell: source /etc/profile.d/apps-bin-path.sh && microk8s.inspect
+  args:
+    executable: /bin/bash
 
 - name: Alias kubectl
-  command: snap alias microk8s.kubectl kubectl
+  shell: "source /etc/profile.d/apps-bin-path.sh && snap alias microk8s.kubectl kubectl"
+  args:
+    executable: /bin/bash
 
 - name: Alias docker
-  command: snap alias microk8s.docker docker
+  shell: "source /etc/profile.d/apps-bin-path.sh && snap alias microk8s.docker docker"
+  args:
+    executable: /bin/bash
 
 - name: Enable dns
-  command: microk8s.enable dns
+  shell: "source /etc/profile.d/apps-bin-path.sh && microk8s.enable dns"
+  args:
+    executable: /bin/bash
 
 - name: Enable ingress
-  command: microk8s.enable ingress
+  shell: "source /etc/profile.d/apps-bin-path.sh && microk8s.enable ingress"
+  args:
+    executable: /bin/bash
 
 - name: Enable storage
-  command: microk8s.enable storage
+  shell: "source /etc/profile.d/apps-bin-path.sh && microk8s.enable storage"
+  args:
+    executable: /bin/bash
 
 - name: Enable K8s Dashboard
-  command: microk8s.enable dashboard
+  shell: "source /etc/profile.d/apps-bin-path.sh && /snap/bin/microk8s.enable dashboard"
   when: k8s_dashboard|default(False)|bool == True
+  args:
+    executable: /bin/bash
